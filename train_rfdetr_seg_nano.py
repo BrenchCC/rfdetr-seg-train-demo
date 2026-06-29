@@ -34,7 +34,7 @@ def parse_args():
     parser.add_argument("--batch-size", type = int, default = 4)
     parser.add_argument("--grad-accum-steps", type = int, default = 4)
     parser.add_argument("--lr", type = float, default = 1e-4)
-    parser.add_argument("--device", type = str, default = "cuda")
+    parser.add_argument("--device", type = str, default = "cpu")
     parser.add_argument("--seed", type = int, default = 42)
 
     return parser.parse_args()
@@ -71,16 +71,32 @@ def main() -> None:
 
     model = RFDETRSegNano()
     model.maybe_download_pretrain_weights()
-    model.train(
-        dataset_dir = str(args.dataset_dir),
-        epochs = args.epochs,
-        batch_size = args.batch_size,
-        grad_accum_steps = args.grad_accum_steps,
-        lr = args.lr,
-        output_dir = str(args.output_dir),
-        device = args.device,
-        seed = args.seed,
-    )
+    # model.train(
+    #     dataset_dir = str(args.dataset_dir),
+    #     epochs = args.epochs,
+    #     batch_size = args.batch_size,
+    #     grad_accum_steps = args.grad_accum_steps,
+    #     lr = args.lr,
+    #     output_dir = str(args.output_dir),
+    #     device = args.device,
+    #     seed = args.seed,
+    #     resolution = 432
+    # )
+    print("resolution:", model.model_config.resolution)
+    print("patch_size:", model.model_config.patch_size)
+    print("num_windows:", model.model_config.num_windows)
+
+    block_size = model.model_config.patch_size * model.model_config.num_windows
+    print("block_size:", block_size)
+
+    candidate_resolutions = [312, 384, 432, 504, 624, 768]
+    valid_resolutions = [
+        resolution
+        for resolution in candidate_resolutions
+        if resolution % block_size == 0
+    ]
+
+    print("valid_resolutions:", valid_resolutions)
 
 
 if __name__ == "__main__":
